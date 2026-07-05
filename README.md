@@ -252,3 +252,84 @@ python calculate_token_distribution_metrics.py \
 - KL/JS 比较的是模型 next-token 分布差异，不是 waveform 级失真。
 - FD/cosine/L2 使用的是 InspireMusic embedding 空间，结果更接近模型感知到的音频 token 差异。
 - 做任何配对指标前，时间对齐都很重要，否则延迟会严重污染结果。
+
+## 5. Fit A Perceptual Score Model
+
+如果你有人类感知实验分数，例如 MOS/CMOS，可以用 `fit_perceptual_score_model.py` 学习一个可扩展的指标融合模型。输入 CSV 至少需要包含一列人类分数，以及若干客观指标列。
+
+示例输入：
+
+```text
+key,human_mos,js_mean,kl_pq_mean,cosine_distance,l2_distance,mel_l1,sisdr
+song001,4.2,0.031,0.210,0.08,1.52,0.14,18.3
+song002,3.7,0.055,0.340,0.12,2.10,0.21,15.6
+```
+
+默认会自动选择所有数值型非目标列作为特征，并根据列名自动判断方向：`kl/js/l2/fd/distance/loss/error` 等会按越小越好处理，`similarity/sisdr/snr/stoi/pesq` 等会按越大越好处理。
+
+推荐先使用 Ridge：
+
+```bash
+python fit_perceptual_score_model.py \
+  --input_csv /path/to/combined_metrics_with_human_scores.csv \
+  --target_col human_mos \
+  --model ridge \
+  --out_dir /path/to/results/perceptual_score_model
+```
+
+如果想指定特征列：
+
+```bash
+python fit_perceptual_score_model.py \
+  --input_csv /path/to/combined_metrics_with_human_scores.csv \
+  --target_col human_mos \
+  --feature_cols js_mean,kl_pq_mean,cosine_distance,l2_distance,mel_l1,sisdr \
+  --model ridge \
+  --out_dir /path/to/results/perceptual_score_model
+```
+
+如果希望所有权重都非负、解释成“每个正向指标都贡献更高感知分数”，可以用 NNLS：
+
+```bash
+python fit_perceptual_score_model.py \
+  --input_csv /path/to/combined_metrics_with_human_scores.csv \
+  --target_col human_mos \
+  --model nnls \
+  --out_dir /path/to/results/perceptual_score_model_nnls
+```
+
+输出：
+
+```text
+perceptual_score_model/predictions.csv
+perceptual_score_model/weights.csv
+perceptual_score_model/summary.json
+```
+
+其中：
+
+- `predictions.csv`：每条样本的人类分数、训练集拟合预测分数、交叉验证预测分数
+- `weights.csv`：每个指标的学习权重，便于解释综合评分公式
+- `summary.json`：Pearson、Spearman、RMSE、MAE 等拟合效果
+
+可以用 `--direction_json` 手动覆盖指标方向。JSON 示例：
+
+```json
+{
+  "js_mean": "lower",
+  "kl_pq_mean": "lower",
+  "cosine_similarity": "higher",
+  "sisdr": "higher"
+}
+```
+
+然后运行：
+
+```bash
+python fit_perceptual_score_model.py \
+  --input_csv /path/to/combined_metrics_with_human_scores.csv \
+  --target_col human_mos \
+  --direction_json metric_directions.json \
+  --model ridge \
+  --out_dir /path/to/results/perceptual_score_model
+```

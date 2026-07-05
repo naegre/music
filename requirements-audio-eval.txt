@@ -1,5 +1,7 @@
-numpy
+﻿numpy
+pandas
 scipy
+scikit-learn
 soundfile
 pyloudnorm
 torch
