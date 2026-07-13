@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environments and editors
+.venv/
+venv/
+env/
+.env
+.idea/
+.vscode/
+.agents/
+.codex/
+
+# Trained models and generated reports
+*.joblib
+*.pt
+*.pth
+*.ckpt
+*.npy
+*.npz
+model_output/
+prediction_output/
+outputs/
+exp/
+pretrained_models/
+
+# Raw audio is normally too large for GitHub
+*.wav
+*.flac
+*.mp3
+*.m4a
+raw_audio/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

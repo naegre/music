@@ -1,0 +1,10 @@
+# Core device-quality model and audio preprocessing dependencies.
+# Install a CUDA-compatible PyTorch separately in the InspireMusic environment;
+# this file intentionally does not replace that installation.
+numpy>=1.24,<3
+pandas>=2.0,<3
+scipy>=1.10,<2
+scikit-learn>=1.3,<2
+joblib>=1.3
+soundfile>=0.12
+pyloudnorm>=0.1.1
